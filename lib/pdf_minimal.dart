@@ -48,22 +48,23 @@ class _PdfViewerMinimalState extends State<PdfViewerMinimal> {
       setState(() {
         _isLoading = true;
       });
-      PdfDocument document;
+
+      Future<PdfDocument> documentFuture;
 
       if (widget.data != null) {
         // Memóriában lévő adatból nyitjuk meg a PDF-et
-        document = PdfDocument.openData(widget.data!) as PdfDocument;
+        documentFuture = PdfDocument.openData(widget.data!);
       } else if (widget.assetPath != null) {
         // Assetből töltjük be
-        document = PdfDocument.openAsset(widget.assetPath!) as PdfDocument;
+        documentFuture = PdfDocument.openAsset(widget.assetPath!);
       } else if (widget.filePath != null) {
         // Fájlrendszerből nyitjuk meg
-        document = PdfDocument.openFile(widget.filePath!) as PdfDocument;
+        documentFuture = PdfDocument.openFile(widget.filePath!);
       } else if (widget.url != null) {
         // Hálózatról töltjük le a PDF-et
         final response = await http.get(Uri.parse(widget.url!));
         if (response.statusCode == 200) {
-          document = PdfDocument.openData(response.bodyBytes) as PdfDocument;
+          documentFuture = PdfDocument.openData(response.bodyBytes);
         } else {
           throw Exception('Hiba a PDF letöltésekor: ${response.statusCode}');
         }
@@ -72,7 +73,7 @@ class _PdfViewerMinimalState extends State<PdfViewerMinimal> {
       }
 
       _pdfController = PdfControllerPinch(
-        document: Future.value(document),
+        document: documentFuture,
         initialPage: widget.initialPage,
       );
 
@@ -104,8 +105,6 @@ class _PdfViewerMinimalState extends State<PdfViewerMinimal> {
     if (_pdfController == null) {
       return const SizedBox();
     }
-    // PdfViewPinch widget biztosítja a pinch-zoom és lapozási funkciókat,
-    // de nincs benne semmiféle extra toolbar.
     return PdfViewPinch(
       controller: _pdfController!,
     );
