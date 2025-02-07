@@ -1,8 +1,8 @@
 name: pdf_minimal
 version: 0.0.1
 description: Egy minimalista PDF viewer Flutter package.
-homepage: https://github.com/felhasznalonev/pdf_minimal
-repository: https://github.com/felhasznalonev/pdf_minimal
+homepage: https://github.com/albhultd/pdf_minimal
+repository: https://github.com/albhultd/pdf_minimal
 
 
 environment:
@@ -24,7 +24,6 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
-flutter:
 
   # To add assets to your package, add an assets section, like this:
   # assets:
