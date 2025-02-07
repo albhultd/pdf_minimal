@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:http/http.dart' as http;
@@ -49,22 +48,23 @@ class _PdfViewerMinimalState extends State<PdfViewerMinimal> {
         _isLoading = true;
       });
 
-      Future<PdfDocument> documentFuture;
+      // Kiválasztjuk a megfelelő PDF forrást aszinkron módon
+      Future<PdfDocument> pdfDocumentFuture;
 
       if (widget.data != null) {
         // Memóriában lévő adatból nyitjuk meg a PDF-et
-        documentFuture = PdfDocument.openData(widget.data!);
+        pdfDocumentFuture = PdfDocument.openData(widget.data!);
       } else if (widget.assetPath != null) {
         // Assetből töltjük be
-        documentFuture = PdfDocument.openAsset(widget.assetPath!);
+        pdfDocumentFuture = PdfDocument.openAsset(widget.assetPath!);
       } else if (widget.filePath != null) {
         // Fájlrendszerből nyitjuk meg
-        documentFuture = PdfDocument.openFile(widget.filePath!);
+        pdfDocumentFuture = PdfDocument.openFile(widget.filePath!);
       } else if (widget.url != null) {
         // Hálózatról töltjük le a PDF-et
         final response = await http.get(Uri.parse(widget.url!));
         if (response.statusCode == 200) {
-          documentFuture = PdfDocument.openData(response.bodyBytes);
+          pdfDocumentFuture = PdfDocument.openData(response.bodyBytes);
         } else {
           throw Exception('Hiba a PDF letöltésekor: ${response.statusCode}');
         }
@@ -72,8 +72,9 @@ class _PdfViewerMinimalState extends State<PdfViewerMinimal> {
         throw Exception('Nincs érvényes PDF forrás megadva!');
       }
 
+      // A PdfControllerPinch-et a Future<PdfDocument> objektummal inicializáljuk
       _pdfController = PdfControllerPinch(
-        document: documentFuture,
+        document: pdfDocumentFuture,
         initialPage: widget.initialPage,
       );
 
@@ -105,6 +106,8 @@ class _PdfViewerMinimalState extends State<PdfViewerMinimal> {
     if (_pdfController == null) {
       return const SizedBox();
     }
+    // PdfViewPinch widget biztosítja a pinch-zoom és lapozási funkciókat,
+    // de nincs benne semmiféle extra toolbar.
     return PdfViewPinch(
       controller: _pdfController!,
     );
