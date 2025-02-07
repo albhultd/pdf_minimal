@@ -1,39 +1,122 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+Íme egy példa a `README.md` fájlra, amelyet felhasználhatsz a **pdf_minimal** Flutter csomagodhoz:
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+---
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
+```markdown
+# pdf_minimal
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+**pdf_minimal** egy minimalista, multiplatform PDF megjelenítő Flutter csomag, amely kizárólag a PDF dokumentum tartalmát jeleníti meg – további navigációs elemek (pl. toolbar) nélkül. A csomag támogatja az asset-ekből, helyi fájlokból, URL-ekről és memóriában lévő PDF adatokból történő betöltést, így könnyen integrálható különböző projektekbe.
 
-## Features
+## Jellemzők
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- **Minimalista megjelenítés:** Csak a PDF tartalmát rendereli, felesleges UI elemek nélkül.
+- **Több forrás támogatása:**  
+  - **Asset:** Például az alkalmazáshoz csomagolt PDF-ek.
+  - **Fájl:** Helyi fájlrendszerből történő betöltés.
+  - **URL:** PDF dokumentum letöltése webről.
+  - **Memória:** PDF adatok közvetlen betöltése `Uint8List` formátumban.
+- **Multiplatform támogatás:** Android, iOS, Web, Windows, macOS és Linux (a [pdfx](https://pub.dev/packages/pdfx) csomag támogatásának köszönhetően).
+- **Pinch-zoom és lapozási funkciók:** A `PdfControllerPinch` vezérlő segítségével.
 
-## Getting started
+## Telepítés
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+Adja hozzá a `pubspec.yaml` fájlod `dependencies` részéhez:
 
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
-
-```dart
-const like = 'sample';
+```yaml
+dependencies:
+  pdf_minimal: ^0.0.1
 ```
 
-## Additional information
+Majd futtasd a következő parancsot a függőségek letöltéséhez:
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+```bash
+flutter pub get
+```
+
+## Használat
+
+A csomag fő komponense a `PdfViewerMinimal` widget, amelyet egyszerűen beilleszthetsz az alkalmazásodba. Az alábbi példa bemutatja, hogyan használhatod az asset forrást:
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:pdf_minimal/pdf_minimal.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'PDF Minimal Demo',
+      home: const PdfViewerExample(),
+    );
+  }
+}
+
+class PdfViewerExample extends StatelessWidget {
+  const PdfViewerExample({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('PDF Minimal'),
+      ),
+      body: const PdfViewerMinimal(
+        // Példa források:
+        // assetPath: 'assets/sample.pdf',
+        // filePath: '/path/to/sample.pdf',
+        // url: 'https://www.example.com/sample.pdf',
+        // data: pdfDataUint8List,
+        assetPath: 'assets/sample.pdf',
+      ),
+    );
+  }
+}
+```
+
+### Források megadása
+
+A `PdfViewerMinimal` widget legalább egy forrást igényel a PDF betöltéséhez. A rendelkezésre álló opciók:
+
+- **assetPath:** Az alkalmazáshoz csomagolt PDF (pl. `assets/sample.pdf`).
+- **filePath:** Helyi fájlrendszerből elérhető PDF.
+- **url:** URL, ahonnan a PDF letölthető.
+- **data:** A PDF adatok `Uint8List` formátumban.
+
+Ne felejtsd el, ha asset-et használsz, deklaráld azt a `pubspec.yaml` fájlodban:
+
+```yaml
+flutter:
+  assets:
+    - assets/sample.pdf
+```
+
+## Támogatott platformok
+
+A csomag a [pdfx](https://pub.dev/packages/pdfx) csomag segítségével biztosít multiplatform támogatást, így a következő platformokon használható:
+
+- **Android**
+- **iOS**
+- **Web**
+- **Windows**
+- **macOS**
+- **Linux**
+
+## Hibák és javaslatok
+
+Ha hibát találsz vagy javaslatod van a csomag fejlesztésére, kérlek nyiss egy issue-t a GitHub repóban:  
+[https://github.com/felhasznalonev/pdf_minimal](https://github.com/felhasznalonev/pdf_minimal)
+
+## Licenc
+
+Ez a csomag az MIT licenc alatt érhető el. További információkért lásd a [LICENSE](LICENSE) fájlt.
+```
+
+---
+
+Ez a README részletesen bemutatja a csomag célját, telepítését és használatát. Ha szükséges, személyre szabhatod a tartalmat (például a GitHub linkeket, verziószámokat és egyéb részleteket) a saját projektednek megfelelően.
