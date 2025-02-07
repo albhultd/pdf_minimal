@@ -1,6 +1,3 @@
-Íme egy példa a `README.md` fájlra, amelyet felhasználhatsz a **pdf_minimal** Flutter csomagodhoz:
-
----
 
 ```markdown
 # pdf_minimal
@@ -110,7 +107,7 @@ A csomag a [pdfx](https://pub.dev/packages/pdfx) csomag segítségével biztosí
 ## Hibák és javaslatok
 
 Ha hibát találsz vagy javaslatod van a csomag fejlesztésére, kérlek nyiss egy issue-t a GitHub repóban:  
-[https://github.com/felhasznalonev/pdf_minimal](https://github.com/felhasznalonev/pdf_minimal)
+[https://github.com/albhultd/pdf_minimal](https://github.com/albhultd/pdf_minimal)
 
 ## Licenc
 
@@ -118,5 +115,3 @@ Ez a csomag az MIT licenc alatt érhető el. További információkért lásd a 
 ```
 
 ---
-
-Ez a README részletesen bemutatja a csomag célját, telepítését és használatát. Ha szükséges, személyre szabhatod a tartalmat (például a GitHub linkeket, verziószámokat és egyéb részleteket) a saját projektednek megfelelően.
