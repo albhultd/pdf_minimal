@@ -21,7 +21,7 @@ Adja hozzá a `pubspec.yaml` fájlod `dependencies` részéhez:
 
 ```yaml
 dependencies:
-  pdf_minimal: ^0.0.1
+  pdf_viewer_minimal: ^0.0.1
 ```
 
 Majd futtasd a következő parancsot a függőségek letöltéséhez:
