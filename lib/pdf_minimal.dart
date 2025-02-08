@@ -1,37 +1,50 @@
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:http/http.dart' as http;
-import 'package:universal_platform/universal_platform.dart';
 
-/// Egy production-ready PDF megjelenítő widget, amely:
-/// - Támogatja az asset, fájl, URL vagy memóriában lévő PDF forrásokat.
-/// - Oldal navigációs vezérlőket biztosít.
-/// - Forgatási vezérlőkkel (balra, jobbra, visszaállítás) rendelkezik.
-/// - Opcionálisan double-tap zoom-ot valósít meg, amelyet platform-specifikusan kezelünk.
-/// - Testreszabható dekorációval, paddinggal, loading és error widgetekkel, valamint callback-ekkel.
-class PdfViewerExtended extends StatefulWidget {
+/// Egy testreszabható PDF megjelenítő widget, amely assetből, fájlból, URL-ről vagy
+/// memóriában lévő adatokból jelenít meg PDF-et.
+/// Legalább egy forrást (assetPath, filePath, url vagy data) kötelező megadni.
+///
+/// Példa használatra:
+/// ```dart
+/// // Keret nélkül:
+/// PdfViewerMinimal(
+///   assetPath: 'assets/sample.pdf',
+/// )
+///
+/// // Kerettel:
+/// PdfViewerMinimal(
+///   assetPath: 'assets/sample.pdf',
+///   decoration: BoxDecoration(
+///     color: Colors.white,
+///     border: Border.all(color: Colors.blue, width: 2),
+///     borderRadius: BorderRadius.circular(8),
+///   ),
+/// )
+/// ```
+class PdfViewerMinimal extends StatefulWidget {
+  /// Az asset útvonal, amelyről a PDF betöltése történik.
   final String? assetPath;
+
+  /// A fájlrendszerből történő PDF betöltéshez használt fájl elérési útja.
   final String? filePath;
+
+  /// Az URL, amelyről a PDF letölthető.
   final String? url;
+
+  /// A memóriában lévő PDF adatokat tartalmazó Uint8List.
   final Uint8List? data;
+
+  /// A kezdeti oldal, amelyről a PDF megjelenítése indul. Alapértelmezett: 1.
   final int initialPage;
+
+  /// Opcionális dekoráció a PDF konténer számára.
+  /// Ha nem adsz meg értéket, alapértelmezettként nincs látható keret.
   final BoxDecoration? decoration;
-  final EdgeInsetsGeometry? padding;
-  final Widget? loadingWidget;
-  final Widget Function(String error, VoidCallback retry)? errorWidgetBuilder;
-  final bool showPageNavigation;
-  final ValueChanged<int>? onPageChanged;
-  final void Function(int pagesCount)? onDocumentLoaded;
 
-  // További vezérlő paraméterek:
-  final bool showAdditionalControls;
-  final bool enableDoubleTapZoom;
-  final double doubleTapZoomScale;
-  final ValueChanged<double>? onZoomChanged;
-
-  const PdfViewerExtended({
+  const PdfViewerMinimal({
     Key? key,
     this.assetPath,
     this.filePath,
@@ -39,33 +52,20 @@ class PdfViewerExtended extends StatefulWidget {
     this.data,
     this.initialPage = 1,
     this.decoration,
-    this.padding,
-    this.loadingWidget,
-    this.errorWidgetBuilder,
-    this.showPageNavigation = false,
-    this.onPageChanged,
-    this.onDocumentLoaded,
-    this.showAdditionalControls = false,
-    this.enableDoubleTapZoom = false,
-    this.doubleTapZoomScale = 2.0,
-    this.onZoomChanged,
-  }) : assert(
-         assetPath != null || filePath != null || url != null || data != null,
-         'Legalább egy PDF forrást meg kell adni (assetPath, filePath, url vagy data)!',
-       ),
-       super(key: key);
+  })  : assert(
+          assetPath != null || filePath != null || url != null || data != null,
+          'Legalább egy PDF forrást meg kell adni (assetPath, filePath, url vagy data)!',
+        ),
+        super(key: key);
 
   @override
-  _PdfViewerExtendedState createState() => _PdfViewerExtendedState();
+  _PdfViewerMinimalState createState() => _PdfViewerMinimalState();
 }
 
-class _PdfViewerExtendedState extends State<PdfViewerExtended> {
+class _PdfViewerMinimalState extends State<PdfViewerMinimal> {
   PdfControllerPinch? _pdfController;
   bool _isLoading = false;
   String? _error;
-  int _currentPage = 1;
-  int _totalPages = 0;
-  double _rotationAngle = 0.0;
 
   @override
   void initState() {
@@ -74,6 +74,7 @@ class _PdfViewerExtendedState extends State<PdfViewerExtended> {
   }
 
   /// A PDF dokumentum betöltése a megadott forrás alapján.
+  /// A megfelelő forrás (data, asset, file vagy url) kiválasztása után inicializálódik a PdfControllerPinch.
   Future<void> _loadPdf() async {
     try {
       setState(() {
@@ -81,7 +82,7 @@ class _PdfViewerExtendedState extends State<PdfViewerExtended> {
         _error = null;
       });
 
-      Future<PdfDocument> pdfDocumentFuture;
+      late Future<PdfDocument> pdfDocumentFuture;
       if (widget.data != null) {
         pdfDocumentFuture = PdfDocument.openData(widget.data!);
       } else if (widget.assetPath != null) {
@@ -104,24 +105,6 @@ class _PdfViewerExtendedState extends State<PdfViewerExtended> {
         initialPage: widget.initialPage,
       );
 
-      // Várjuk meg a dokumentum betöltését és értesítjük a callback-et.
-      final document = await _pdfController!.document;
-      _totalPages = document.pagesCount;
-      widget.onDocumentLoaded?.call(_totalPages);
-      _currentPage = widget.initialPage;
-
-      _pdfController!.addListener(() {
-        if (_currentPage != _pdfController!.page) {
-          setState(() {
-            _currentPage = _pdfController!.page;
-          });
-          widget.onPageChanged?.call(_currentPage);
-        }
-        // Ha a PdfControllerPinch támogatja a zoom értéket, itt követhetjük:
-        // double currentZoom = _pdfController!.currentZoom;
-        // widget.onZoomChanged?.call(currentZoom);
-      });
-
       setState(() {
         _isLoading = false;
       });
@@ -133,188 +116,63 @@ class _PdfViewerExtendedState extends State<PdfViewerExtended> {
     }
   }
 
+  /// Publikus aszinkron függvény a PDF újratöltésére.
+  /// Ezt a függvényt például egy külső triggerrel hívhatod meg, ha a PDF-et frissíteni szeretnéd.
+  Future<void> reloadPdf() async {
+    await _loadPdf();
+  }
+
   @override
   void dispose() {
     _pdfController?.dispose();
     super.dispose();
   }
 
-  /// Előző oldalra léptetés.
-  void _goToPreviousPage() {
-    if (_pdfController != null && _currentPage > 1) {
-      _pdfController!.previousPage(
-        curve: Curves.easeInOut,
-        duration: const Duration(milliseconds: 200),
-      );
-    }
-  }
-
-  /// Következő oldalra léptetés.
-  void _goToNextPage() {
-    if (_pdfController != null && _currentPage < _totalPages) {
-      _pdfController!.nextPage(
-        curve: Curves.easeInOut,
-        duration: const Duration(milliseconds: 200),
-      );
-    }
-  }
-
-  /// Forgatás balra.
-  void _rotateLeft() {
-    setState(() {
-      _rotationAngle -= 90;
-    });
-  }
-
-  /// Forgatás jobbra.
-  void _rotateRight() {
-    setState(() {
-      _rotationAngle += 90;
-    });
-  }
-
-  /// Forgatás visszaállítása.
-  void _resetRotation() {
-    setState(() {
-      _rotationAngle = 0;
-    });
-  }
-
-  /// Oldal navigációs sáv építése.
-  Widget _buildNavigation() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Colors.black.withOpacity(0.05),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: _currentPage > 1 ? _goToPreviousPage : null,
-            icon: const Icon(Icons.chevron_left),
-          ),
-          Text('$_currentPage / $_totalPages'),
-          IconButton(
-            onPressed: _currentPage < _totalPages ? _goToNextPage : null,
-            icon: const Icon(Icons.chevron_right),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// További vezérlő sáv (pl. forgatás) építése.
-  Widget _buildAdditionalControls() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: Colors.black.withOpacity(0.05),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            onPressed: _rotateLeft,
-            icon: const Icon(Icons.rotate_left),
-            tooltip: 'Balra forgatás',
-          ),
-          IconButton(
-            onPressed: _rotateRight,
-            icon: const Icon(Icons.rotate_right),
-            tooltip: 'Jobbra forgatás',
-          ),
-          IconButton(
-            onPressed: _resetRotation,
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Forgatás visszaállítása',
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// A PDF megjelenítése, opcionálisan double-tap zoom kezeléssel.
-  Widget _buildPdfView() {
-    Widget pdfView = PdfViewPinch(
-      controller: _pdfController!,
-    );
-
-    // Platform specifikus ellenőrzés: mobil platformokon engedjük a double-tap zoom-ot,
-    // míg weben és asztali környezetben (nem mobil) letilthatjuk vagy másként kezeljük.
-    final bool isMobile = UniversalPlatform.isAndroid || UniversalPlatform.isIOS;
-
-    if (isMobile && widget.enableDoubleTapZoom) {
-      pdfView = GestureDetector(
-        onDoubleTap: () {
-          // Implementáció: ha a PdfControllerPinch támogatja a programozott zoom-ot,
-          // itt állíthatjuk be a kívánt zoom szintet.
-          debugPrint('Double-tap: zooming to ${widget.doubleTapZoomScale}x');
-          // Példa (ha elérhető):
-          // _pdfController!.setZoom(widget.doubleTapZoomScale);
-          // widget.onZoomChanged?.call(widget.doubleTapZoomScale);
-        },
-        child: pdfView,
-      );
-    } else if (kIsWeb || (!isMobile && !kIsWeb)) {
-      // Weben vagy asztali környezetben (amely nem mobil) a double-tap zoom általában nem elvárt.
-      if (widget.enableDoubleTapZoom) {
-        debugPrint('Double-tap zoom is disabled on this platform for better user experience.');
-      }
-    }
-
-    // Forgatás alkalmazása a megadott szög alapján.
-    return Transform.rotate(
-      angle: _rotationAngle * (3.1415926535897932 / 180),
-      child: pdfView,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Betöltés esetén jelenítünk meg egy indikátort.
     if (_isLoading) {
-      return widget.loadingWidget ??
-          const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
+
+    // Hiba esetén megjelenítünk egy hibaüzenetet és egy "Újrapróbálom" gombot.
     if (_error != null) {
-      return widget.errorWidgetBuilder != null
-          ? widget.errorWidgetBuilder!(_error!, _loadPdf)
-          : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Hiba: $_error'),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _loadPdf,
-                    child: const Text('Újrapróbálom'),
-                  ),
-                ],
-              ),
-            );
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Hiba: $_error'),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _loadPdf,
+              child: const Text('Újrapróbálom'),
+            ),
+          ],
+        ),
+      );
     }
+
     if (_pdfController == null) {
       return const SizedBox();
     }
 
-    // PDF tartalom konténerben, testreszabható dekorációval és paddinggal.
-    Widget pdfContent = Container(
-      padding: widget.padding ?? EdgeInsets.zero,
+    // A PDF megjelenítése egy testreszabható konténerben.
+    // Ha nincs megadva dekoráció, akkor alapértelmezettként nem jelenik meg keret.
+    return Container(
       decoration: widget.decoration ??
           const BoxDecoration(
             color: Colors.white,
+            // Átlátszó keret: nincs látható border
+            border: Border.fromBorderSide(
+              BorderSide(
+                color: Colors.transparent,
+                width: 0,
+              ),
+            ),
           ),
-      child: _buildPdfView(),
-    );
-
-    // Építjük a teljes layoutot: PDF tartalom + opcionális oldal navigáció + további vezérlők.
-    List<Widget> children = [];
-    children.add(Expanded(child: pdfContent));
-    if (widget.showPageNavigation) {
-      children.add(_buildNavigation());
-    }
-    if (widget.showAdditionalControls) {
-      children.add(_buildAdditionalControls());
-    }
-
-    return Column(
-      children: children,
+      child: PdfViewPinch(
+        controller: _pdfController!,
+      ),
     );
   }
 }
